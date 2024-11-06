@@ -30,14 +30,14 @@ export default function Home() {
                 Post a Job
               </Button> */}
               <Button size="lg" className="w-full sm:w-auto">
-            <Link href="/login">Log In</Link>
-          </Button>
+                <Link href="/login">Log In</Link>
+              </Button>
               {/* <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 Find Work
               </Button> */}
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                <Link href="/signup" className="text-black font-semibold">Sign Up</Link>
+              </Button>
             </div>
           </div>
         </section>
