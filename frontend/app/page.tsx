@@ -26,11 +26,17 @@ export default function Home() {
               repair needs.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" className="w-full sm:w-auto">
+              {/* <Button size="lg" className="w-full sm:w-auto">
                 Post a Job
+              </Button> */}
+              <Button size="lg" className="w-full sm:w-auto">
+                <Link href="/login">Log In</Link>
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+              {/* <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 Find Work
+              </Button> */}
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                <Link href="/signup" className="text-black font-semibold">Sign Up</Link>
               </Button>
             </div>
           </div>

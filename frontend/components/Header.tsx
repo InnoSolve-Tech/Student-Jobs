@@ -1,9 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Hammer } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Chatbot from "../components/chatBox";
+import { Dialog, DialogTrigger, DialogContent, DialogClose } from "@/components/ui/dialog";
 
 export function Header() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const openChat = () => setIsChatOpen(true);
+  const closeChat = () => setIsChatOpen(false);
+
   return (
     <header className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -24,15 +34,25 @@ export function Header() {
           <Link href="/admin-dashboard" className="hover:underline">
             Admin
           </Link>
+          <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+            <DialogTrigger asChild>
+              <button className="hover:underline" onClick={openChat}>
+                Chat with AI
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <Chatbot />
+            </DialogContent>
+          </Dialog>
         </nav>
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          <Button variant="outline" asChild>
+          {/* <Button variant="outline" asChild>
             <Link href="/login">Log In</Link>
-          </Button>
-          <Button asChild>
+          </Button> */}
+          {/* <Button asChild>
             <Link href="/signup">Sign Up</Link>
-          </Button>
+          </Button> */}
         </div>
       </div>
     </header>
