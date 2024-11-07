@@ -1,6 +1,4 @@
-'use client';
-
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 
 interface ChatMessage {
     sender: 'user' | 'bot';
@@ -11,6 +9,7 @@ export default function Chatbot() {
     const [message, setMessage] = useState<string>('');
     const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
     const [isSending, setIsSending] = useState(false);
+    const ERROR_MESSAGE = 'There was an error processing your request.';
 
     const sendMessage = async (msg: string) => {
         if (!msg.trim()) return;
@@ -20,24 +19,28 @@ export default function Chatbot() {
 
         try {
             setIsSending(true);
+
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg }),
+                body: JSON.stringify({
+                    messages: [{ text: msg }],
+                }),
             });
 
             if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
             const data = await response.json();
+
             setChatLog((prevChatLog) => [
                 ...prevChatLog,
-                { sender: 'bot', content: data.botMessage },
+                { sender: 'bot', content: data.botMessage || ERROR_MESSAGE },
             ]);
         } catch (error) {
             console.error('Error fetching bot response:', error);
             setChatLog((prevChatLog) => [
                 ...prevChatLog,
-                { sender: 'bot', content: 'There was an error processing your request.' },
+                { sender: 'bot', content: ERROR_MESSAGE },
             ]);
         } finally {
             setIsSending(false);
@@ -48,12 +51,13 @@ export default function Chatbot() {
         setMessage(e.target.value);
     };
 
-    const handleSendClick = () => {
+    const handleSend = (e: FormEvent) => {
+        e.preventDefault();
         if (message.trim()) sendMessage(message);
     };
 
     return (
-        <div className="max-w-md p-1 bg-white rounded-lg">
+        <div className="max-w-md p-4">
             <h2 className="text-lg font-bold mb-4">Chat with AI</h2>
             <div className="border p-3 rounded-lg mb-4 h-64 overflow-y-auto">
                 {chatLog.map((msg, index) => (
@@ -64,13 +68,11 @@ export default function Chatbot() {
                 ))}
                 {isSending && (
                     <div className="flex justify-start">
-                        <div className="p-3 rounded-lg bg-gray-200 text-gray-800">
-                            Generating...
-                        </div>
+                        <div className="p-3 rounded-lg bg-gray-200 text-gray-800">Generating...</div>
                     </div>
                 )}
             </div>
-            <div className="flex items-center space-x-2">
+            <form onSubmit={handleSend} className="flex items-center space-x-2">
                 <input
                     type="text"
                     value={message}
@@ -79,13 +81,13 @@ export default function Chatbot() {
                     className="w-full p-2 border rounded-lg focus:outline-none"
                 />
                 <button
-                    onClick={handleSendClick}
+                    type="submit"
                     className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
                     disabled={isSending}
                 >
                     {isSending ? <span className="loader"></span> : 'Send'}
                 </button>
-            </div>
+            </form>
             <style jsx>{`
                 .loader {
                     border: 2px solid #f3f3f3;

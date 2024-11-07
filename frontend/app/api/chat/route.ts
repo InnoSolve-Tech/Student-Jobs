@@ -1,52 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
-const MAX_RETRIES = 2;
-const INITIAL_DELAY = 1000;
+export const runtime = 'edge';
 
-async function callOpenAI(message: string, retries = 0): Promise<any> {
+export async function POST(req: NextRequest) {
     try {
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [{ role: 'user', content: message }],
-            temperature: 0.7,
-            max_tokens: 100,
+        const { messages } = await req.json();
+
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + GEMINI_API_KEY, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: messages.map((msg: { text: string }) => ({ text: msg.text }))
+                    }
+                ]
+            }),
         });
 
-        return { botMessage: response.choices[0]?.message?.content || 'No response from bot' };
+        if (!response.ok) throw new Error(`Gemini API error: ${response.statusText}`);
+
+        const data = await response.json();
+
+        const botMessage = data?.candidates[0]?.content?.parts[0]?.text || 'No response';
+        return NextResponse.json({ botMessage });
 
     } catch (error: any) {
-        if (error.response?.status === 429 && retries < MAX_RETRIES) {
-            const delay = INITIAL_DELAY * 2 ** retries;
-            console.log(`429 Rate limit hit, retrying in ${delay}ms...`);
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            return callOpenAI(message, retries + 1);
-        }
-
-        console.error('Error connecting to OpenAI:', error);
-        return { error: 'An error occurred while connecting to OpenAI' };
-    }
-}
-
-export async function POST(request: NextRequest) {
-    try {
-        const { message } = await request.json();
-        if (!message) {
-            return NextResponse.json({ message: 'Message is required' }, { status: 400 });
-        }
-
-        const { botMessage, error } = await callOpenAI(message);
-        if (error) {
-            return NextResponse.json({ error }, { status: 429 });
-        }
-
-        return NextResponse.json({ botMessage });
-    } catch (error) {
-        console.error('Error processing request:', error);
-        return NextResponse.json({ error: 'An error occurred while processing the request' }, { status: 500 });
+        console.error('Error connecting to Gemini:', error.message || error);
+        return NextResponse.json({ error: 'Error connecting to Gemini API' }, { status: 500 });
     }
 }
